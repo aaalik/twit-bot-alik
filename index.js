@@ -30,11 +30,14 @@ async function tweetIt(event) {
 
   const re = RegExp('(nitip)\!', 'g')
   const res = re.test(msg_content.toLowerCase())
-
+  
   if(res){
     T.post('statuses/update', { status: msg_content }, function(err, data, response) {
       if(err){
         console.log(err)
+      }else{
+        const senderScreenName = event.users[message.message_create.sender_id].screen_name;
+        console.log("@"+senderScreenName+" has submitted.")
       }
     })
   }
