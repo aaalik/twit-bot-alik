@@ -28,7 +28,7 @@ async function tweetIt(event) {
 
   const msg_content = message.message_create.message_data.text
 
-  const re = RegExp('(cgb)\!', 'g')
+  const re = RegExp('(nitip)\!', 'g')
   const res = re.test(msg_content.toLowerCase())
 
   if(res){
