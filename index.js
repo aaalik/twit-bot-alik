@@ -3,6 +3,11 @@ const { Autohook } = require('twitter-autohook');
 const util = require('util');
 const request = require('request');
 const Twit = require('twit');
+const express = require("express")
+const wakeDyno = require("woke-dyno");
+
+// create an Express app
+const app = express();
 
 const T = new Twit({
   consumer_key: process.env.TWITTER_CONSUMER_KEY,
@@ -49,6 +54,14 @@ function sleep(ms){
         setTimeout(resolve,ms)
     })
 }
+
+// start the server, then call wokeDyno(url).start()
+app.listen(8081, () => {
+  wakeDyno({
+      url: process.env.DYNO_URL,  // url string
+      interval: 1200000 // interval in milliseconds
+  }).start(); 
+});
 
 (async start => {
   try {
