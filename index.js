@@ -3,7 +3,6 @@ const { Autohook } = require('twitter-autohook');
 const util = require('util');
 const request = require('request');
 const Twit = require('twit');
-const http = require('http');
 
 const T = new Twit({
   consumer_key: process.env.TWITTER_CONSUMER_KEY,
@@ -50,11 +49,6 @@ function sleep(ms){
         setTimeout(resolve,ms)
     })
 }
-
-http.createServer(function (req, res) {
-  res.write('Waiting'); //write a response to the client
-  res.end(); //end the response
-}).listen(8080); //the server object listens on port 8080
 
 (async start => {
   try {
