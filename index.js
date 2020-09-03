@@ -3,7 +3,6 @@ const { Autohook } = require('twitter-autohook');
 const util = require('util');
 const request = require('request');
 const Twit = require('twit');
-const { start } = require('repl');
 
 const T = new Twit({
   consumer_key: process.env.TWITTER_CONSUMER_KEY,
@@ -11,40 +10,6 @@ const T = new Twit({
   access_token: process.env.TWITTER_ACCESS_TOKEN,
   access_token_secret: process.env.TWITTER_ACCESS_TOKEN_SECRET
 })
-
-const post = util.promisify(request.post);
-
-const oAuthConfig = {
-  token: process.env.TWITTER_ACCESS_TOKEN,
-  token_secret: process.env.TWITTER_ACCESS_TOKEN_SECRET,
-  consumer_key: process.env.TWITTER_CONSUMER_KEY,
-  consumer_secret: process.env.TWITTER_CONSUMER_SECRET,
-};
-
-async function markAsRead(messageId, senderId, auth) {
-  const requestConfig = {
-    url: 'https://api.twitter.com/1.1/direct_messages/mark_read.json',
-    form: {
-      last_read_event_id: messageId,
-      recipient_id: senderId,
-    },
-    oauth: auth,
-  };
-
-  await post(requestConfig);
-}
-
-async function indicateTyping(senderId, auth) {
-  const requestConfig = {
-    url: 'https://api.twitter.com/1.1/direct_messages/indicate_typing.json',
-    form: {
-      recipient_id: senderId,
-    },
-    oauth: auth,
-  };
-
-  await post(requestConfig);
-}
 
 async function tweetIt(event) {
   if (!event.direct_message_events) {
