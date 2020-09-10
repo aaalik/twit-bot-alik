@@ -3,11 +3,6 @@ const { Autohook } = require('twitter-autohook');
 const util = require('util');
 const request = require('request');
 const Twit = require('twit');
-const express = require("express")
-const wakeDyno = require("woke-dyno");
-
-// create an Express app
-const app = express();
 
 const T = new Twit({
   consumer_key: process.env.TWITTER_CONSUMER_KEY,
@@ -23,30 +18,32 @@ async function tweetIt(event) {
 
   const message = event.direct_message_events.shift();
 
-  if (typeof message === 'undefined' || typeof message.message_create === 'undefined') {
-    return;
-  }
- 
-  if (message.message_create.sender_id === message.message_create.target.recipient_id) {
-    return;
-  }
+  if(message.message_create.sender_id!=313927356){
 
-  const msg_content = message.message_create.message_data.text
+    if (typeof message === 'undefined' || typeof message.message_create === 'undefined') {
+      return;
+    }
+   
+    if (message.message_create.sender_id === message.message_create.target.recipient_id) {
+      return;
+    }
 
-  const re = RegExp('(nitip)\!', 'g')
-  const res = re.test(msg_content.toLowerCase())
-  
-  if(res){
-    T.post('statuses/update', { status: msg_content }, function(err, data, response) {
-      if(err){
-        console.log(err)
-      }else{
-        const senderScreenName = event.users[message.message_create.sender_id].screen_name;
-        console.log("@"+senderScreenName+" has submitted.")
-      }
-    })
+    const msg_content = message.message_create.message_data.text
+
+    const re = RegExp('(ngukngak)\!', 'g')
+    const res = re.test(msg_content.toLowerCase())
+    
+    if(res){
+      T.post('statuses/update', { status: msg_content }, function(err, data, response) {
+        if(err){
+          console.log(err)
+        }else{
+          const senderScreenName = event.users[message.message_create.sender_id].screen_name;
+          console.log("@"+senderScreenName+" has submitted.")
+        }
+      })
+    }
   }
-
 }
 
 function sleep(ms){
@@ -54,14 +51,6 @@ function sleep(ms){
         setTimeout(resolve,ms)
     })
 }
-
-// start the server, then call wokeDyno(url).start()
-app.listen(8081, () => {
-  wakeDyno({
-      url: process.env.DYNO_URL,  // url string
-      interval: 1200000 // interval in milliseconds
-  }).start(); 
-});
 
 (async start => {
   try {
