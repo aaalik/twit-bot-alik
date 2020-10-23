@@ -10,8 +10,10 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "crypto": "^1.0.1",
     "dotenv": "^8.2.0",
     "express": "^4.17.1",
+    "oauth-1.0a": "^2.2.6",
     "twit": "^2.2.11",
     "twitter-autohook": "^1.7.2",
     "woke-dyno": "0.0.4"
