@@ -57,7 +57,25 @@ async function tweetIt(event) {
   
                 const senderScreenName = event.users[message.message_create.sender_id].screen_name;
                 console.log("@"+senderScreenName+" has submitted.")
-  
+
+                const rply_msg = {
+                  event: {
+                    type: 'message_create',
+                    message_create: {
+                      target: {
+                        recipient_id: message.message_create.sender_id,
+                      },
+                      message_data: {
+                        text: `nuhun lurrrddd, ieu geus post nya https://twitter.com/fesscgb/status/`+data2.id_str,
+                      }
+                    }
+                  }
+                }
+
+                T.post('direct_messages/events/new', rply_msg, function(err, data3, response3) {
+                  if (err) return console.log("error: ",err)
+                })
+                
                 fs.unlink(filePath, (err) => {
                   if (err) return console.log("error: ",err);
                 })
@@ -68,7 +86,6 @@ async function tweetIt(event) {
 
         })
 
-
       }else{
 
         T.post('statuses/update', { status: msg_content }, function(err, data, response) {
@@ -77,6 +94,24 @@ async function tweetIt(event) {
           }else{
             const senderScreenName = event.users[message.message_create.sender_id].screen_name;
             console.log("@"+senderScreenName+" has submitted.")
+
+            const rply_msg = {
+              event: {
+                type: 'message_create',
+                message_create: {
+                  target: {
+                    recipient_id: message.message_create.sender_id,
+                  },
+                  message_data: {
+                    text: `nuhun lurrrddd, ieu geus post nya https://twitter.com/fesscgb/status/`+data.id_str,
+                  }
+                }
+              }
+            }
+
+            T.post('direct_messages/events/new', rply_msg, function(err, data3, response3) {
+              if (err) return console.log("error: ",err)
+            })
           }
         })
 
