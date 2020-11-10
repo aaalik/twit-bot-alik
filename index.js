@@ -19,9 +19,13 @@ async function tweetIt(event) {
   }
 
   const message = event.direct_message_events.shift();
+
+  const owner_id = message.message_create.target.recipient_id
+  const owner_name = event.users[owner_id].screen_name;
+
   media_tmp = message.message_create.message_data.attachment
 
-  if(message.message_create.sender_id!=313927356){
+  if(message.message_create.sender_id!=owner_id){
 
     if (typeof message === 'undefined' || typeof message.message_create === 'undefined') {
       return;
@@ -66,7 +70,7 @@ async function tweetIt(event) {
                         recipient_id: message.message_create.sender_id,
                       },
                       message_data: {
-                        text: `nuhun lurrrddd, ieu geus post nya https://twitter.com/fesscgb/status/`+data2.id_str,
+                        text: `nuhun lurrrddd, cek twitna nya https://twitter.com/${owner_name}/status/`+data2.id_str,
                       }
                     }
                   }
@@ -103,7 +107,7 @@ async function tweetIt(event) {
                     recipient_id: message.message_create.sender_id,
                   },
                   message_data: {
-                    text: `nuhun lurrrddd, ieu geus post nya https://twitter.com/fesscgb/status/`+data.id_str,
+                    text: `nuhun lurrrddd, cek twitna nya https://twitter.com/${owner_name}/status/`+data.id_str,
                   }
                 }
               }
