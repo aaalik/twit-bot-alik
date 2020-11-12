@@ -6,6 +6,14 @@ const crypto = require('crypto');
 const request = require('request');
 const fs = require('fs');
 
+var index = 0
+const maxtwit = 280
+var endtwit = maxtwit
+var owner_id = 0
+var owner_name = ""
+let max_twit_index = 0
+var first_twit_id = 0
+
 const T = new Twit({
   consumer_key: process.env.TWITTER_CONSUMER_KEY,
   consumer_secret: process.env.TWITTER_CONSUMER_SECRET,
@@ -14,18 +22,28 @@ const T = new Twit({
 })
 
 async function tweetIt(event) {
+  index = 0
+  endtwit = maxtwit
+  owner_id = 0
+  owner_name = ""
+  max_twit_index = 0
+
   if (!event.direct_message_events) {
     return;
   }
 
   const message = event.direct_message_events.shift();
+  const sender_id = message.message_create.sender_id
+  const msg_content = message.message_create.message_data.text
 
-  const owner_id = message.message_create.target.recipient_id
-  const owner_name = event.users[owner_id].screen_name;
+  owner_id = message.message_create.target.recipient_id
+  owner_name = event.users[owner_id].screen_name
+
+  max_twit_index = Math.ceil(msg_content.length/maxtwit)
 
   media_tmp = message.message_create.message_data.attachment
 
-  if(message.message_create.sender_id!=owner_id){
+  if(sender_id!=owner_id){
 
     if (typeof message === 'undefined' || typeof message.message_create === 'undefined') {
       return;
@@ -35,13 +53,10 @@ async function tweetIt(event) {
       return;
     }
 
-    const msg_content = message.message_create.message_data.text
-
     const re = RegExp('(ngukngak)\!', 'g')
     const res = re.test(msg_content.toLowerCase())
     
     if(res){
-
       if (typeof media_tmp !== 'undefined' && media_tmp.media.type === "photo") {
         const url = media_tmp.media.media_url;
         const filename = url.split("/")
@@ -52,76 +67,48 @@ async function tweetIt(event) {
         result_twit = twtt.replace(expression, '');
 
         downloadMedia(url, filePath, function(){
-
           T.postMediaChunked({ file_path: filePath }, function (err, data, response) {
-            T.post('statuses/update', { status: result_twit, media_ids: data.media_id_string }, function(err, data2, response) {
-              if(err){
-                console.log(err)
-              }else{
-  
-                const senderScreenName = event.users[message.message_create.sender_id].screen_name;
-                console.log("@"+senderScreenName+" has submitted.")
+            if(msg_content.length>maxtwit){
+              postTwit(result_twit, null, sender_id, data.media_id_string)
+              const senderScreenName = event.users[message.message_create.sender_id].screen_name;
+              console.log("@"+senderScreenName+" has submitted.")
+            }else{
+              T.post('statuses/update', { status: result_twit, media_ids: data.media_id_string }, function(err, data2, response) {
+                if(err){
+                  console.log(err)
+                }else{
+                  const senderScreenName = event.users[message.message_create.sender_id].screen_name;
+                  console.log("@"+senderScreenName+" has submitted.")
 
-                const rply_msg = {
-                  event: {
-                    type: 'message_create',
-                    message_create: {
-                      target: {
-                        recipient_id: message.message_create.sender_id,
-                      },
-                      message_data: {
-                        text: `nuhun lurrrddd, cek twitna nya https://twitter.com/${owner_name}/status/`+data2.id_str,
-                      }
-                    }
-                  }
+                  sendDM(sender_id, data2.id_str)
+
+                  fs.unlink(filePath, (err) => {
+                    if (err) return console.log("error: ",err);
+                  })
                 }
-
-                T.post('direct_messages/events/new', rply_msg, function(err, data3, response3) {
-                  if (err) return console.log("error: ",err)
-                })
-                
-                fs.unlink(filePath, (err) => {
-                  if (err) return console.log("error: ",err);
-                })
-  
-              }
-            })
-          })
-
-        })
-
-      }else{
-
-        T.post('statuses/update', { status: msg_content }, function(err, data, response) {
-          if(err){
-            console.log(err)
-          }else{
-            const senderScreenName = event.users[message.message_create.sender_id].screen_name;
-            console.log("@"+senderScreenName+" has submitted.")
-
-            const rply_msg = {
-              event: {
-                type: 'message_create',
-                message_create: {
-                  target: {
-                    recipient_id: message.message_create.sender_id,
-                  },
-                  message_data: {
-                    text: `nuhun lurrrddd, cek twitna nya https://twitter.com/${owner_name}/status/`+data.id_str,
-                  }
-                }
-              }
+              })
             }
-
-            T.post('direct_messages/events/new', rply_msg, function(err, data3, response3) {
-              if (err) return console.log("error: ",err)
-            })
-          }
+          })
         })
-
+      }else{
+        if(msg_content.length>maxtwit){
+          postTwit(msg_content, null, sender_id, null)
+          const senderScreenName = event.users[message.message_create.sender_id].screen_name;
+          console.log("@"+senderScreenName+" has submitted.")
+        }else{
+          T.post('statuses/update', { status: msg_content }, function(err, data, response) {
+            if(err){
+              console.log(err)
+            }else{
+              const senderScreenName = event.users[message.message_create.sender_id].screen_name;
+              console.log("@"+senderScreenName+" has submitted.")
+  
+              sendDM(sender_id, data.id_str)
+            }
+          })
+        }
       }
     }
-
   }
 }
 
@@ -176,6 +163,71 @@ function downloadMedia(url, filePath, _callback){
     }
   )
 
+}
+
+function sendDM(sender_id, id_str){
+  const rply_msg = {
+    event: {
+      type: 'message_create',
+      message_create: {
+        target: {
+          recipient_id: sender_id,
+        },
+        message_data: {
+          text: `nuhun lurrrddd, cek twitna nya https://twitter.com/${owner_name}/status/`+id_str,
+        }
+      }
+    }
+  }
+
+  T.post('direct_messages/events/new', rply_msg, function(err, data3, response3) {
+    if (err) return console.log("error: ",err)
+  })
+}
+
+function postTwit(msg, rply, sender_id, media_id_str){
+  if(index < max_twit_index){
+    var obj_msg = {}
+
+    if(index==0){
+      endtwit -= 1 
+      const indks = (index*(maxtwit-2))
+      var twit_slice = msg.substring(endtwit, indks)
+      twit_slice += '-'
+
+      obj_msg = {
+        status: twit_slice,
+        media_ids: media_id_str
+      }
+    }else{
+      endtwit += (maxtwit-2)
+      const indks = ((index*(maxtwit-2))+1) 
+      var twit_slice = msg.substring(endtwit, indks)
+      if(index==(max_twit_index-1)){
+        twit_slice = '-' + twit_slice
+        sendDM(sender_id, first_twit_id)
+      }else{
+        twit_slice = '-' + twit_slice + '-'
+      }
+
+      obj_msg = {
+        status: twit_slice, 
+        in_reply_to_status_id: rply
+      }
+    }
+
+    T.post('statuses/update', obj_msg, function(err, data, response) {
+      if(err){
+        console.log(err)
+      }else{
+        if(index==0){
+          first_twit_id = data.id_str
+        }
+        index++;
+        postTwit(msg, data.id_str, sender_id, media_id_str)
+      }
+    })
+  }
 }
 
 (async start => {
